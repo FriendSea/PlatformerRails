@@ -8,6 +8,7 @@ namespace PlatformerRails
     {
         Vector3 StartPoint;
         Quaternion StartRotation;
+		Quaternion EndRotation;
         float a, b;
         float EndRadian;
 
@@ -60,7 +61,7 @@ namespace PlatformerRails
 
         float NearestRadian(Vector3 point)
         {
-            Vector3 C = point - StartPoint; ;
+            Vector3 C = point - StartPoint;
             Vector2 PlanerVec = new Vector2(Vector3.Dot(C, UnitU), Vector3.Dot(C, UnitV));
             float length = Mathf.Sqrt((PlanerVec.y - a) * (PlanerVec.y - a) + (PlanerVec.x + b) * (PlanerVec.x + b));
             float radian;
@@ -73,7 +74,7 @@ namespace PlatformerRails
 
         Quaternion RotationByRadian(float radian)
         {
-            return Quaternion.AngleAxis(radian * Mathf.Rad2Deg, UnitW) * StartRotation;
+			return Quaternion.AngleAxis(radian * Mathf.Rad2Deg, UnitW) * Quaternion.Lerp(StartRotation, EndRotation, radian / EndRadian);
         }
 
         Vector3 Position(float radian)
@@ -108,7 +109,7 @@ namespace PlatformerRails
 
         void CalcParamater(Vector3 endpoint, Quaternion endrotation)
         {
-            UnitU = StartRotation * Vector3.forward; ;
+            UnitU = StartRotation * Vector3.forward;
             UnitW = Vector3.Cross(UnitU, endpoint - StartPoint).normalized;
             UnitV = Vector3.Cross(UnitW, UnitU);
             Vector3 EndTangent = (endrotation * Vector3.forward - Vector3.Dot(endrotation * Vector3.forward, UnitW) * UnitW).normalized;
@@ -132,6 +133,9 @@ namespace PlatformerRails
             StartPoint = startPoint;
             StartRotation = startRotation;
             CalcParamater(endPoint, endRotation);
-        }
+			EndRotation = Quaternion.AngleAxis(-EndRadian * Mathf.Rad2Deg, UnitW) * endRotation;
+			//EndRotation = StartRotation;
+
+		}
     }
 }
