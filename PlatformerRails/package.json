@@ -1,0 +1,12 @@
+{
+	"name": "com.friendsea.platformerrails",
+	"version": "0.0.0",
+	"displayName": "PlatformerRails",
+	"description": "",
+	"unity": "2020.3",
+	"dependencies": {
+   },
+	"author": {
+	  "name": "FriendSea"
+	}
+  }
