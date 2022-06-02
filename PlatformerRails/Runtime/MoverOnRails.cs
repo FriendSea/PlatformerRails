@@ -1,5 +1,7 @@
 ﻿using System.Collections;
 using UnityEngine;
+using UnityEngine.LowLevel;
+using System.Linq;
 
 namespace PlatformerRails
 {
@@ -32,13 +34,13 @@ namespace PlatformerRails
 
         void OnEnable()
         {
-            StartCoroutine(RunLateFixedUpdate());
+            LateFixedUpdate.OnLateFixedUpdate += UpdateLocalPosition;
             UpdateLocalPosition();
         }
 
         void OnDisable()
         {
-            StopCoroutine(RunLateFixedUpdate());
+            LateFixedUpdate.OnLateFixedUpdate -= UpdateLocalPosition;
             Velocity = Vector3.zero;
         }
 
@@ -46,11 +48,6 @@ namespace PlatformerRails
         {
             Position += Velocity * Time.fixedDeltaTime;
             rigidbody.MovePosition(rail.Local2World(Position));
-        }
-
-        void LateFixedUpdate()
-        {
-            UpdateLocalPosition();
         }
 
         void UpdateLocalPosition()
@@ -69,15 +66,44 @@ namespace PlatformerRails
                 Velocity = Quaternion.Inverse(newrot) * transform.rotation * Velocity;
             transform.rotation = newrot;
         }
-
-        IEnumerator RunLateFixedUpdate()
-        {
-            var wait = new WaitForFixedUpdate();
-            while (true)
-            {
-                yield return wait;
-                LateFixedUpdate();
-            }
-        }
     }
+
+    static class LateFixedUpdate
+	{
+        static bool initialized;
+        static event System.Action _onLateFixedUpdate;
+        public static event System.Action OnLateFixedUpdate
+		{
+			add
+			{
+				if (!initialized)
+				{
+				    var loops = PlayerLoop.GetCurrentPlayerLoop();
+                    for(int i=0;i<loops.subSystemList.Length;i++)
+					{
+                        var isFixedUpdate = false;
+                        foreach(var item in loops.subSystemList[i].subSystemList)
+                            isFixedUpdate |= item.type == typeof(UnityEngine.PlayerLoop.FixedUpdate.PhysicsFixedUpdate);
+						if (isFixedUpdate)
+						{
+                            loops.subSystemList[i].subSystemList =
+                                loops.subSystemList[i].subSystemList.Append(new PlayerLoopSystem()
+                                {
+                                    type = typeof(LateFixedUpdate),
+                                    updateDelegate = () => _onLateFixedUpdate?.Invoke()
+                                }).ToArray();
+                            PlayerLoop.SetPlayerLoop(loops);
+                            break;
+						}
+					}
+				}
+                _onLateFixedUpdate += value;
+                initialized = true;
+			}
+			remove
+			{
+                _onLateFixedUpdate -= value;
+			}
+		}
+	}
 }
