@@ -16,6 +16,9 @@ namespace PlatformerRails
         IRail rail;
         Rigidbody rigidbody;
 
+        public bool IsOnRail { get; private set; }
+        public event System.Action OnLocalPositionUpdated;
+
         void Reset()
         {
             rigidbody = GetComponent<Rigidbody>();
@@ -53,18 +56,19 @@ namespace PlatformerRails
         void UpdateLocalPosition()
         {
             var w2l = rail.World2Local(transform.position);
-            if (w2l == null)
-            {
-                Destroy(gameObject);
-                return;
-            }
+            IsOnRail = w2l != null;
+            if (!IsOnRail) return;
             Position = w2l.Value;
             rigidbody.velocity = Vector3.zero;
 
             var newrot = rail.Rotation(Position.z);
+            /*
             if (Quaternion.Angle(transform.rotation, newrot) > 30f)
                 Velocity = Quaternion.Inverse(newrot) * transform.rotation * Velocity;
+            */
             transform.rotation = newrot;
+
+            OnLocalPositionUpdated?.Invoke();
         }
     }
 

@@ -19,12 +19,22 @@ public class PlayerMove : MonoBehaviour
     float GroundCheckLength = 0.05f;
 
     MoverOnRails Controller;
-    void Start()
+    void Awake()
     {
         Controller = GetComponent<MoverOnRails>();
     }
 
-    void FixedUpdate()
+	private void OnEnable()
+	{
+        Controller.OnLocalPositionUpdated += CorrectGroundDistance;
+	}
+
+	private void OnDisable()
+	{
+        Controller.OnLocalPositionUpdated -= CorrectGroundDistance;
+    }
+
+	void FixedUpdate()
     {
         //To make X value 0 means locate the character just above the rail
         Controller.Velocity.x = -Controller.Position.x * 5f;
@@ -35,12 +45,20 @@ public class PlayerMove : MonoBehaviour
         var distance = CheckGroundDistance();
         if (distance != null)
         {
-            Controller.Velocity.y = (GroundDistance - distance.Value) / Time.fixedDeltaTime; //ths results for smooth move on slopes
+            //Controller.Velocity.y = (GroundDistance - distance.Value) / Time.fixedDeltaTime; //ths results for smooth move on slopes
+            Controller.Velocity.y = 0f;
             if (Input.GetButtonDown("Jump"))
                 Controller.Velocity.y = JumpSpeed;
         }
         else
             Controller.Velocity.y -= Gravity * Time.fixedDeltaTime;
+    }
+
+    void CorrectGroundDistance()
+	{
+        var distance = CheckGroundDistance();
+        if (distance != null)
+            Controller.Position += Vector3.up * (GroundDistance - distance.Value);
     }
 
     float? CheckGroundDistance()
