@@ -33,7 +33,14 @@ public class PlayerMove : MonoBehaviour
 	{
         Controller.OnLocalPositionUpdated -= CorrectGroundDistance;
     }
+    void Update() 
+    {
+        //GetButtonDown is polled per-frame. That's why we have to move the jump check here.
+        var distance = CheckGroundDistance();
+        if (distance != null && Input.GetButtonDown("Jump"))
+            Controller.Velocity.y = JumpSpeed;
 
+    }
 	void FixedUpdate()
     {
         //To make X value 0 means locate the character just above the rail
@@ -46,9 +53,7 @@ public class PlayerMove : MonoBehaviour
         if (distance != null)
         {
             //Controller.Velocity.y = (GroundDistance - distance.Value) / Time.fixedDeltaTime; //ths results for smooth move on slopes
-            Controller.Velocity.y = 0f;
-            if (Input.GetButtonDown("Jump"))
-                Controller.Velocity.y = JumpSpeed;
+            // Controller.Velocity.y = 0f;
         }
         else
             Controller.Velocity.y -= Gravity * Time.fixedDeltaTime;
