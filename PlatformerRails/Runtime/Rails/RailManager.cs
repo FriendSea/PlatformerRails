@@ -43,6 +43,11 @@ namespace PlatformerRails
             return compositeRail.World2Local(WorldPosition);
         }
 
+        public Vector3? World2Local(Vector3 WorldPosition, out IRail usedSubrail)
+        {
+            return compositeRail.World2Local(WorldPosition, out usedSubrail);
+        }
+
         public float Height(float RailZ)
         {
             return compositeRail.Height(RailZ);

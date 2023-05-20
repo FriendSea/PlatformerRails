@@ -43,6 +43,12 @@ namespace PlatformerRails
             return ret;
         }
 
+        public override Vector3? World2Local(Vector3 WorldPosition, out IRail usedSubrail)
+        {
+            usedSubrail = this;
+            return World2Local(WorldPosition);
+        }
+
 #if UNITY_EDITOR
         const float DrawWidth = 0.25f;
         void OnDrawGizmos()

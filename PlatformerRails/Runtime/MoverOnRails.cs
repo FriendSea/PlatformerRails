@@ -1,23 +1,23 @@
 ﻿using System.Collections;
 using UnityEngine;
-using UnityEngine.LowLevel;
-using System.Linq;
 
 namespace PlatformerRails
 {
     [RequireComponent(typeof(Rigidbody))]
-    public class MoverOnRails : MonoBehaviour
+    public class MoverOnRails : MonoBehaviour, IMover
     {
         [SerializeField]
         RailBehaviour railBehaviour;
         public Vector3 Position { get; set; }
-        public Vector3 Velocity;
+        public Vector3 Velocity { get; set; }
 
         IRail rail;
         Rigidbody rigidbody;
+        IRail currentSingleRail;
 
-        public bool IsOnRail { get; private set; }
-        public event System.Action OnLocalPositionUpdated;
+        public event System.Action<IRail> RailChangeEvent;
+
+        public IRail Rail => rail != null ? rail : railBehaviour;
 
         void Reset()
         {
@@ -37,77 +37,64 @@ namespace PlatformerRails
 
         void OnEnable()
         {
-            LateFixedUpdate.OnLateFixedUpdate += UpdateLocalPosition;
+            StartCoroutine(RunLateFixedUpdate());
             UpdateLocalPosition();
         }
 
         void OnDisable()
         {
-            LateFixedUpdate.OnLateFixedUpdate -= UpdateLocalPosition;
+            StopCoroutine(RunLateFixedUpdate());
             Velocity = Vector3.zero;
         }
 
         void FixedUpdate()
         {
             Position += Velocity * Time.fixedDeltaTime;
-            rigidbody.MovePosition(rail.Local2World(Position));
+            Vector3 worldPosition = rail.Local2World(Position);
+            rigidbody.MovePosition(worldPosition);
+        }
+
+        void LateFixedUpdate()
+        {
+            UpdateLocalPosition();
         }
 
         void UpdateLocalPosition()
         {
-            var w2l = rail.World2Local(transform.position);
-            IsOnRail = w2l != null;
-            if (!IsOnRail) return;
+            IRail usedRail;
+            var w2l = rail.World2Local(transform.position, out usedRail);
+            if (w2l == null)
+            {
+                Destroy(gameObject);
+                return;
+            }
             Position = w2l.Value;
             rigidbody.velocity = Vector3.zero;
 
             var newrot = rail.Rotation(Position.z);
-            /*
             if (Quaternion.Angle(transform.rotation, newrot) > 30f)
                 Velocity = Quaternion.Inverse(newrot) * transform.rotation * Velocity;
-            */
             transform.rotation = newrot;
+            CheckUsedRail(usedRail);
+        }
 
-            OnLocalPositionUpdated?.Invoke();
+        IEnumerator RunLateFixedUpdate()
+        {
+            var wait = new WaitForFixedUpdate();
+            while (true)
+            {
+                yield return wait;
+                LateFixedUpdate();
+            }
+        }
+
+        private void CheckUsedRail(IRail usedRail)
+        {
+            if (usedRail != currentSingleRail)
+            {
+                RailChangeEvent?.Invoke(usedRail);
+                currentSingleRail = usedRail;
+            }
         }
     }
-
-    static class LateFixedUpdate
-	{
-        static bool initialized;
-        static event System.Action _onLateFixedUpdate;
-        public static event System.Action OnLateFixedUpdate
-		{
-			add
-			{
-				if (!initialized)
-				{
-				    var loops = PlayerLoop.GetCurrentPlayerLoop();
-                    for(int i=0;i<loops.subSystemList.Length;i++)
-					{
-                        var isFixedUpdate = false;
-                        foreach(var item in loops.subSystemList[i].subSystemList)
-                            isFixedUpdate |= item.type == typeof(UnityEngine.PlayerLoop.FixedUpdate.PhysicsFixedUpdate);
-						if (isFixedUpdate)
-						{
-                            loops.subSystemList[i].subSystemList =
-                                loops.subSystemList[i].subSystemList.Append(new PlayerLoopSystem()
-                                {
-                                    type = typeof(LateFixedUpdate),
-                                    updateDelegate = () => _onLateFixedUpdate?.Invoke()
-                                }).ToArray();
-                            PlayerLoop.SetPlayerLoop(loops);
-                            break;
-						}
-					}
-				}
-                _onLateFixedUpdate += value;
-                initialized = true;
-			}
-			remove
-			{
-                _onLateFixedUpdate -= value;
-			}
-		}
-	}
 }

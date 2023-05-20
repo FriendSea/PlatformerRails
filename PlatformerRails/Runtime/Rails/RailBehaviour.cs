@@ -9,6 +9,7 @@ namespace PlatformerRails
         public abstract Vector3 Local2World(Vector3 LocalPosition);
         public abstract Quaternion Rotation(float RailZ);
         public abstract Vector3? World2Local(Vector3 WorldPosition);
+        public abstract Vector3? World2Local(Vector3 WorldPosition, out IRail usedSubrail);
 
         void OnEnable()
         {

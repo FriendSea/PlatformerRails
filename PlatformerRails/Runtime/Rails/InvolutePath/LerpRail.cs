@@ -39,5 +39,11 @@ namespace PlatformerRails
         {
             return Quaternion.Inverse(rotation) * (WorldPosition - StartPoint);
         }
+
+        public Vector3? World2Local(Vector3 WorldPosition, out IRail usedSubrail)
+        {
+            usedSubrail = this;
+            return Quaternion.Inverse(rotation) * (WorldPosition - StartPoint);
+        }
     }
 }

@@ -46,7 +46,13 @@ namespace PlatformerRails
             return Quaternion.Inverse(RotationByRadian(rad)) * (WorldPosition - Position(rad)) + Vector3.forward * Radian2Length(rad);
         }
 
-        float Radian2Length(float radian)
+        public Vector3? World2Local(Vector3 WorldPosition, out IRail usedSubrail)
+        {
+            usedSubrail = this;
+            return World2Local(WorldPosition);
+        }
+
+            float Radian2Length(float radian)
         {
             return a * radian + b * radian * radian / 2f;
         }

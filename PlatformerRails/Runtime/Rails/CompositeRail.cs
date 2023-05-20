@@ -36,6 +36,15 @@ namespace PlatformerRails
                 return pos + Vector3.forward * margin;
             }
 
+            public Vector3? World2Local(Vector3 WorldPosition, out IRail usedSubrail)
+            {
+                Vector3? pos = Rail.World2Local(WorldPosition, out usedSubrail);
+                if (pos == null) return null;
+                if (pos.Value.z < 0) return null;
+                if (pos.Value.z > Rail.Length) return null;
+                return pos + Vector3.forward * margin;
+            }
+
             public float Height(float RailZ)
             {
                 return Rail.Height(RailZ - margin);
@@ -64,6 +73,15 @@ namespace PlatformerRails
         public Vector3? World2Local(Vector3 WorldPosition)
         {
             return chainRail.World2Local(WorldPosition);
+        }
+
+        public Vector3? World2Local(Vector3 WorldPosition, out IRail usedSubrail)
+        {
+            IRail usedParentRail;
+            Vector3? localPosition = chainRail.World2Local(WorldPosition, out usedParentRail);
+            if (usedParentRail is MarginRail marginRail) usedSubrail = marginRail.Rail;
+            else usedSubrail = usedParentRail;
+            return localPosition;
         }
 
         public CompositeRail()

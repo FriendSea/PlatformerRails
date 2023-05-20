@@ -8,6 +8,8 @@ namespace PlatformerRails
     /// </summary>
     public class ChainRail : IRail
     {
+        private const float PRECISSION = 0.1f;
+
         List<IRail> Childs = new List<IRail>();
         public IEnumerable<IRail> Segments { get { return Childs; } }
 
@@ -72,6 +74,30 @@ namespace PlatformerRails
         List<W2Lresult> results = new List<W2Lresult>();
         public Vector3? World2Local(Vector3 WorldPosition)
         {
+            SearchRail(WorldPosition);
+            if (results.Count > 0)
+                return results[0].pos + Vector3.forward * results[0].dist;
+            else
+                return null;
+        }
+
+        public Vector3? World2Local(Vector3 WorldPosition, out IRail usedSubrail)
+        {
+            SearchRail(WorldPosition);
+            if (results.Count > 0)
+            {   
+                usedSubrail = results[0].rail;
+                return results[0].pos + Vector3.forward * results[0].dist;
+            }
+            else
+            {
+                usedSubrail = null;
+                return null;
+            }
+        }
+
+        private void SearchRail(Vector3 WorldPosition)
+        {
             float distance = 0;
             results.Clear();
             foreach (var rail in Childs)
@@ -91,14 +117,13 @@ namespace PlatformerRails
                 };
                 results.Add(res);
             }
-            if (results.Count <= 0) return null;
+            if (results.Count <= 0) return;
             results.Sort((a, b) =>
             {
                 if (a.IsHighThanRail && !b.IsHighThanRail) return -1;
                 if (!a.IsHighThanRail && b.IsHighThanRail) return 1;
                 return (int)Mathf.Sign(a.RailDist - b.RailDist);
             });
-            return results[0].pos + Vector3.forward * results[0].dist;
         }
 
         public Quaternion Rotation(float RailZ)

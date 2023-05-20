@@ -100,6 +100,12 @@ namespace PlatformerRails
 			return chainRail.World2Local(WorldPosition);
 		}
 
+		public override Vector3? World2Local(Vector3 WorldPosition, out IRail usedSubrail)
+		{
+			if (!chainRail.isValid) SetupPath();
+			return chainRail.World2Local(WorldPosition, out usedSubrail);
+		}
+
 		public override Quaternion Rotation(float RailZ)
 		{
 			if (!chainRail.isValid) SetupPath();

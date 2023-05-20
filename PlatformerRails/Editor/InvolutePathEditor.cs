@@ -8,7 +8,7 @@ namespace PlatformerRails
 	[CustomEditor(typeof(InvolutePath))]
 	public class InvolutePathEditor : PathEditor
 	{
-		ReorderableList reorderableList;
+		ReorderableList reorderableList;		
 
 		void OnEnable()
 		{
@@ -35,6 +35,7 @@ namespace PlatformerRails
 			reorderableList.DoLayoutList();
 			serializedObject.ApplyModifiedProperties();
 
+			GUILayout.Label("Length: " + Path.Length);
 			EditorGUI.BeginChangeCheck();
 			bool loop = GUILayout.Toggle(Path.Loop, "Looping", "button");
 			if (EditorGUI.EndChangeCheck())

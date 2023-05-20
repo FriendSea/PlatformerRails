@@ -25,6 +25,14 @@ namespace PlatformerRails
             return result;
         }
 
+        public override Vector3? World2Local(Vector3 WorldPosition, out IRail usedSubrail)
+        {
+            var result = Quaternion.Inverse(transform.rotation) * (WorldPosition - transform.position);
+            usedSubrail = this;
+            if (result.y > Range) return null;
+            return result;
+        }
+
         public override Quaternion Rotation(float RailZ)
         {
             return transform.rotation;
