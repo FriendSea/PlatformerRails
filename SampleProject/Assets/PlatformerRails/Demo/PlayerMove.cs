@@ -19,9 +19,12 @@ public class PlayerMove : MonoBehaviour
     float GroundCheckLength = 0.05f;
 
     MoverOnRails Controller;
+    PlayerInputs inputs;
     void Awake()
     {
         Controller = GetComponent<MoverOnRails>();
+        inputs = new PlayerInputs();
+        inputs.Enable();
     }
 
 	private void OnEnable()
@@ -39,15 +42,16 @@ public class PlayerMove : MonoBehaviour
         //To make X value 0 means locate the character just above the rail
         Controller.Velocity.x = -Controller.Position.x * 5f;
         //Changing Z value in local position means moving toward rail direction
-        Controller.Velocity.z += Input.GetAxisRaw("Horizontal") * Accelaration * Time.fixedDeltaTime;
+        Controller.Velocity.z += inputs.Player.Horizontal.ReadValue<float>() * Accelaration * Time.fixedDeltaTime;
         Controller.Velocity.z -= Controller.Velocity.z * Drag * Time.fixedDeltaTime;
         //Y+ axis = Upwoard (depends on rail rotation)
         var distance = CheckGroundDistance();
         if (distance != null)
         {
             //Controller.Velocity.y = (GroundDistance - distance.Value) / Time.fixedDeltaTime; //ths results for smooth move on slopes
-            Controller.Velocity.y = 0f;
-            if (Input.GetButtonDown("Jump"))
+            if (Controller.Velocity.y < 0f)
+                Controller.Velocity.y = 0f;
+            if (inputs.Player.Jump.WasPressedThisFrame())
                 Controller.Velocity.y = JumpSpeed;
         }
         else
